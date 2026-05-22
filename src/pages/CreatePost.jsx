@@ -19,6 +19,9 @@ function CreatePost() {
     const [content, setContent] =
         useState("");
 
+        const [imageUrl, setImageUrl] =
+            useState("");
+
     const [communityId, setCommunityId] =
         useState("");
 
@@ -62,6 +65,7 @@ function CreatePost() {
                 {
                     title,
                     content,
+                    imageUrl,
                     communityId
                 }
             );
@@ -420,6 +424,32 @@ function CreatePost() {
                             text-white
                         "
                     />
+                    
+                    <input
+
+    type="text"
+
+    placeholder="Paste Meme Image URL"
+
+    value={imageUrl}
+
+    onChange={(e) =>
+        setImageUrl(
+            e.target.value
+        )
+    }
+
+    className="
+        w-full
+        p-4
+        rounded-2xl
+        bg-black/40
+        border
+        border-gray-700
+        mb-5
+        text-white
+    "
+/>
 
                     <select
 

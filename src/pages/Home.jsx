@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import API from "../services/api";
 
 import {
     useNavigate
@@ -10,6 +11,90 @@ function Home() {
 
     const [section, setSection] =
         useState("explore");
+
+        const [posts, setPosts] =
+        useState([]);
+
+        const [commentText, setCommentText] =
+        useState("");
+
+        useEffect(() => {
+
+    fetchPosts();
+
+}, []);
+
+const fetchPosts = async () => {
+
+    try {
+
+        const response =
+            await API.get("/api/posts");
+
+        setPosts(response.data);
+
+    } catch (error) {
+
+        console.log(error);
+    }
+};
+
+const likePost = async (id) => {
+
+    try {
+
+        await API.put(
+            `/api/posts/like/${id}`
+        );
+
+        fetchPosts();
+
+    } catch (error) {
+
+        console.log(error);
+    }
+};
+
+const addComment = async (postId) => {
+
+    try {
+
+        const token =
+            localStorage.getItem("token");
+
+        await API.post(
+
+            "/api/comments",
+
+            {
+                text: commentText,
+                postId: postId
+            },
+
+            {
+                headers: {
+                    Authorization:
+                        `Bearer ${token}`
+                }
+            }
+        );
+
+        alert("Comment Added 🚀");
+
+        setCommentText("");
+
+    } catch (error) {
+
+        console.log(error);
+    }
+};
+
+const logout = () => {
+
+    localStorage.removeItem("token");
+
+    navigate("/login");
+};
 
     return (
 
@@ -187,6 +272,8 @@ function Home() {
 
             {/* BUTTONS */}
 
+            
+
             <div
                 className="
                     px-14
@@ -329,6 +416,25 @@ function Home() {
                 >
                     😎 Meme Culture
                 </button>
+
+                <button
+
+    onClick={logout}
+
+    className="
+        px-10
+        py-5
+        rounded-full
+        border
+        border-red-500
+        bg-red-500/10
+        text-2xl
+        hover:scale-105
+        transition
+    "
+>
+    🚪 Logout
+</button>
 
             </div>
 
@@ -720,6 +826,171 @@ function Home() {
                         </div>
                     )
                 }
+
+                {/* LIVE POSTS */}
+
+<div className="px-14 pb-20">
+
+    <h1
+        className="
+            text-6xl
+            font-black
+            text-orange-400
+            mb-10
+        "
+    >
+        🔥 Live Meme Feed
+    </h1>
+
+    <div
+        className="
+            grid
+            gap-8
+        "
+    >
+
+        {
+
+            posts.map((post) => (
+
+                <div
+
+                    key={post.id}
+
+                    className="
+                        bg-white/10
+                        border
+                        border-gray-700
+                        rounded-3xl
+                        p-8
+                        backdrop-blur-xl
+                        hover:scale-[1.02]
+                        transition
+                    "
+                >
+
+                    <h2
+                        className="
+                            text-4xl
+                            font-bold
+                            text-orange-400
+                        "
+                    >
+                        {post.title}
+                    </h2>
+
+                    <p
+                        className="
+                            text-gray-300
+                            mt-5
+                            text-2xl
+                        "
+                    >
+                        {post.content}
+                    </p>
+
+                    <div className="mt-4 text-gray-400">
+                        Community: {post.community?.name}
+                    </div>
+
+                    {
+                        post.imageUrl && (
+
+                            <img
+                                src={post.imageUrl}
+                                className="
+                                w-full
+                                rounded-3xl
+                                mt-6
+                                max-h-[500px]
+                                object-cover
+                                "
+                            />
+                            )
+                        }
+
+                    <div
+                        className="
+                            flex
+                            gap-5
+                            mt-8
+                        "
+                    >
+
+                        <div className="flex gap-3">
+
+                            <button
+
+                                onClick={() =>
+                                likePost(post.id)
+                            }
+
+                            className="
+                            bg-pink-500/20
+                            border
+                            border-pink-500
+                            px-5
+                            py-2
+                            rounded-xl
+                            "
+                        >
+                        ❤️ Like ({post.likes})
+                    </button>
+
+    <input
+
+        type="text"
+
+        placeholder="Write comment..."
+
+        value={commentText}
+
+        onChange={(e) =>
+            setCommentText(
+                e.target.value
+            )
+        }
+
+        className="
+            bg-black/30
+            border
+            border-gray-700
+            px-4
+            py-2
+            rounded-xl
+            text-white
+        "
+    />
+
+    <button
+
+        onClick={() =>
+            addComment(post.id)
+        }
+
+        className="
+            bg-blue-500/20
+            border
+            border-blue-500
+            px-5
+            py-2
+            rounded-xl
+        "
+    >
+        💬 Comment
+    </button>
+
+</div>
+
+                    </div>
+
+                </div>
+            ))
+        }
+
+    </div>
+
+</div>
 
             </div>
 
