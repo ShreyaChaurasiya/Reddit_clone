@@ -19,7 +19,7 @@ function Login() {
         setError("");
         try {
             const response = await axios.post(
-                "https://redditbackend-production.up.railway.app/api/auth/login",
+                "https://reddit-backend-xp48.onrender.com/api/auth/login",
                 { email, password }
             );
             localStorage.setItem("token", response.data);

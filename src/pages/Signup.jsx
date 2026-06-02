@@ -24,7 +24,7 @@ function Signup() {
         setError("");
         try {
             await axios.post(
-                "https://redditbackend-production.up.railway.app/api/auth/signup",
+                "https://reddit-backend-xp48.onrender.com/api/auth/signup",
                 { username, email, password }
             );
             alert("Account ban gaya! Ab login karo 🎉");
