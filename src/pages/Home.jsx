@@ -90,7 +90,7 @@ function Home() {
                     <h1 className="text-7xl font-black leading-tight">
                         Welcome To
                         <span className="block bg-gradient-to-r from-orange-400 to-pink-500 bg-clip-text text-transparent">
-                            MemeSphere 😂
+                            VibePost 💖🎀✨
                         </span>
                     </h1>
                     <p className="text-xl text-gray-400 mt-6 leading-relaxed">
