@@ -21,7 +21,7 @@ function Navbar() {
                     <FaRedditAlien className="text-white text-2xl" />
                 </div>
                 <div>
-                    <h1 className="text-2xl font-extrabold text-orange-400">MemeSphere</h1>
+                    <h1 className="text-2xl font-extrabold text-orange-400">VibePost</h1>
                     <p className="text-xs text-gray-400">Laugh • Post • Chill 🚀</p>
                 </div>
             </Link>

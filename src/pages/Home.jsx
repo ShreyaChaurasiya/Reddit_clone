@@ -94,7 +94,7 @@ function Home() {
                         </span>
                     </h1>
                     <p className="text-xl text-gray-400 mt-6 leading-relaxed">
-                        Discover viral memes, trending jokes, crazy internet culture 🚀🔥
+                        Post your vibe, find your tribe 🚀🔥
                     </p>
                     <div className="flex gap-4 mt-8">
                         <button
