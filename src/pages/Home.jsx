@@ -1,999 +1,237 @@
 import { useEffect, useState } from "react";
 import API from "../services/api";
-
-import {
-    useNavigate
-} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { FaHeart, FaComment, FaUser, FaFire } from "react-icons/fa";
 
 function Home() {
-
     const navigate = useNavigate();
+    const [posts, setPosts] = useState([]);
+    const [commentText, setCommentText] = useState({});
+    const [postComments, setPostComments] = useState({});
+    const [openComments, setOpenComments] = useState({});
+    const [loading, setLoading] = useState(true);
 
-    const [section, setSection] =
-        useState("explore");
-
-        const [posts, setPosts] =
-        useState([]);
-
-        const [commentText, setCommentText] =
-        useState("");
-
-        useEffect(() => {
-
-    fetchPosts();
-
-}, []);
-
-const fetchPosts = async () => {
-
-    try {
-
-        const response =
-            await API.get("/api/posts");
-
-        setPosts(response.data);
-
-    } catch (error) {
-
-        console.log(error);
-    }
-};
-
-const likePost = async (id) => {
-
-    try {
-
-        await API.put(
-            `/api/posts/like/${id}`
-        );
-
+    useEffect(() => {
+        if (!localStorage.getItem("token")) {
+            navigate("/login");
+            return;
+        }
         fetchPosts();
+    }, []);
 
-    } catch (error) {
+    const fetchPosts = async () => {
+        try {
+            const response = await API.get("/api/posts");
+            setPosts(response.data.reverse()); // Latest pehle
+        } catch (error) {
+            console.log(error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-        console.log(error);
-    }
-};
+    const likePost = async (id) => {
+        try {
+            await API.put(`/api/posts/like/${id}`);
+            fetchPosts();
+        } catch (error) {
+            console.log(error);
+        }
+    };
 
-const addComment = async (postId) => {
+    const toggleComments = async (postId) => {
+        const isOpen = openComments[postId];
+        setOpenComments(prev => ({ ...prev, [postId]: !isOpen }));
 
-    try {
-
-        const token =
-            localStorage.getItem("token");
-
-        await API.post(
-
-            "/api/comments",
-
-            {
-                text: commentText,
-                postId: postId
-            },
-
-            {
-                headers: {
-                    Authorization:
-                        `Bearer ${token}`
-                }
+        if (!isOpen && !postComments[postId]) {
+            try {
+                const response = await API.get(`/api/comments/${postId}`);
+                setPostComments(prev => ({ ...prev, [postId]: response.data }));
+            } catch (error) {
+                console.log(error);
             }
+        }
+    };
+
+    const addComment = async (postId) => {
+        const text = commentText[postId];
+        if (!text || !text.trim()) {
+            alert("Comment likho pehle!");
+            return;
+        }
+        try {
+            await API.post("/api/comments", { text, postId });
+            setCommentText(prev => ({ ...prev, [postId]: "" }));
+            // Comments refresh karo
+            const response = await API.get(`/api/comments/${postId}`);
+            setPostComments(prev => ({ ...prev, [postId]: response.data }));
+        } catch (error) {
+            alert("Comment add karne me error");
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-black flex items-center justify-center">
+                <div className="text-orange-400 text-4xl animate-pulse">Loading MemeSphere... 🚀</div>
+            </div>
         );
-
-        alert("Comment Added 🚀");
-
-        setCommentText("");
-
-    } catch (error) {
-
-        console.log(error);
     }
-};
-
-const logout = () => {
-
-    localStorage.removeItem("token");
-
-    navigate("/login");
-};
 
     return (
+        <div className="min-h-screen bg-black text-white">
 
-        <div
-            className="
-                min-h-screen
-                bg-black
-                text-white
-                overflow-hidden
-            "
-        >
+            {/* HERO */}
+            <section className="px-8 py-16 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-orange-500/10 blur-[150px] rounded-full pointer-events-none" />
+                <div className="absolute top-40 left-10 w-[300px] h-[300px] bg-pink-500/10 blur-[150px] rounded-full pointer-events-none" />
 
-            {/* HERO SECTION */}
-
-            <section
-                className="
-                    px-14
-                    py-20
-                    relative
-                "
-            >
-
-                <div
-                    className="
-                        absolute
-                        top-0
-                        right-0
-                        w-[600px]
-                        h-[600px]
-                        bg-orange-500/20
-                        blur-[150px]
-                        rounded-full
-                    "
-                />
-
-                <div
-                    className="
-                        absolute
-                        top-40
-                        left-20
-                        w-[400px]
-                        h-[400px]
-                        bg-pink-500/20
-                        blur-[150px]
-                        rounded-full
-                    "
-                />
-
-                <div
-                    className="
-                        grid
-                        md:grid-cols-2
-                        gap-20
-                        items-center
-                        relative
-                        z-10
-                    "
-                >
-
-                    <div>
-
-                        <h1
-                            className="
-                                text-8xl
-                                font-black
-                                leading-tight
-                            "
+                <div className="relative z-10 max-w-4xl">
+                    <h1 className="text-7xl font-black leading-tight">
+                        Welcome To
+                        <span className="block bg-gradient-to-r from-orange-400 to-pink-500 bg-clip-text text-transparent">
+                            MemeSphere 😂
+                        </span>
+                    </h1>
+                    <p className="text-xl text-gray-400 mt-6 leading-relaxed">
+                        Discover viral memes, trending jokes, crazy internet culture 🚀🔥
+                    </p>
+                    <div className="flex gap-4 mt-8">
+                        <button
+                            onClick={() => navigate("/create-post")}
+                            className="bg-gradient-to-r from-orange-500 to-red-500 px-8 py-4 rounded-2xl text-xl font-bold hover:scale-105 transition"
                         >
-                            Welcome To
-                            <span
-                                className="
-                                    block
-                                    bg-gradient-to-r
-                                    from-orange-400
-                                    to-pink-500
-                                    bg-clip-text
-                                    text-transparent
-                                "
-                            >
-                                MemeSphere 😂
-                            </span>
-                        </h1>
-
-                        <p
-                            className="
-                                text-2xl
-                                text-gray-400
-                                mt-10
-                                leading-relaxed
-                            "
+                            Create Post 🚀
+                        </button>
+                        <button
+                            onClick={() => navigate("/create-community")}
+                            className="border border-orange-500 px-8 py-4 rounded-2xl text-xl hover:bg-orange-500 transition"
                         >
-                            Discover viral memes,
-                            trending jokes,
-                            crazy internet culture,
-                            and hilarious communities
-                            all in one place 🚀🔥
-                        </p>
-
-                        <div
-                            className="
-                                flex
-                                gap-6
-                                mt-12
-                            "
-                        >
-
-                            <button
-
-                                onClick={() =>
-                                    setSection("explore")
-                                }
-
-                                className="
-                                    bg-gradient-to-r
-                                    from-orange-500
-                                    to-red-500
-                                    px-10
-                                    py-5
-                                    rounded-3xl
-                                    text-2xl
-                                    font-bold
-                                    hover:scale-105
-                                    transition
-                                "
-                            >
-                                Explore Now 🚀
-                            </button>
-
-                            <button
-
-                                onClick={() =>
-                                    setSection("memes")
-                                }
-
-                                className="
-                                    border
-                                    border-orange-500
-                                    px-10
-                                    py-5
-                                    rounded-3xl
-                                    text-2xl
-                                    hover:bg-orange-500
-                                    transition
-                                "
-                            >
-                                Trending Memes 😂
-                            </button>
-
-                        </div>
-
+                            New Community 🌍
+                        </button>
                     </div>
-
-                    <div
-                        className="
-                            relative
-                            flex
-                            justify-center
-                        "
-                    >
-
-                        <img
-                            src="https://cdn-icons-png.flaticon.com/512/4140/4140048.png"
-                            className="
-                                w-[500px]
-                                animate-bounce
-                                drop-shadow-[0_0_80px_rgba(255,100,0,0.8)]
-                            "
-                        />
-
-                    </div>
-
                 </div>
-
             </section>
 
-            {/* BUTTONS */}
-
-            
-
-            <div
-                className="
-                    px-14
-                    flex
-                    flex-wrap
-                    gap-8
-                    mt-10
-                "
-            >
-
-                <button
-                    onClick={() =>
-                        setSection("trending")
-                    }
-                    className="
-                        px-10
-                        py-5
-                        rounded-full
-                        border
-                        border-orange-500
-                        bg-orange-500/10
-                        text-2xl
-                        hover:scale-105
-                        transition
-                    "
-                >
-                    🔥 Trending
-                </button>
-
-                <button
-                    onClick={() =>
-                        setSection("viral")
-                    }
-                    className="
-                        px-10
-                        py-5
-                        rounded-full
-                        border
-                        border-pink-500
-                        bg-pink-500/10
-                        text-2xl
-                        hover:scale-105
-                        transition
-                    "
-                >
-                    🚀 Viral Posts
-                </button>
-
-                <button
-                    onClick={() =>
-                        setSection("funny")
-                    }
-                    className="
-                        px-10
-                        py-5
-                        rounded-full
-                        border
-                        border-yellow-500
-                        bg-yellow-500/10
-                        text-2xl
-                        hover:scale-105
-                        transition
-                    "
-                >
-                    😂 Funny Memes
-                </button>
-
-                <button
-                    onClick={() =>
-                        setSection("media")
-                    }
-                    className="
-                        px-10
-                        py-5
-                        rounded-full
-                        border
-                        border-blue-500
-                        bg-blue-500/10
-                        text-2xl
-                        hover:scale-105
-                        transition
-                    "
-                >
-                    🎬 Media Ready
-                </button>
-
-                <button
-                    onClick={() =>
-                        setSection("community")
-                    }
-                    className="
-                        px-10
-                        py-5
-                        rounded-full
-                        border
-                        border-green-500
-                        bg-green-500/10
-                        text-2xl
-                        hover:scale-105
-                        transition
-                    "
-                >
-                    🌍 Community Power
-                </button>
-
-                <button
-                    onClick={() =>
-                        setSection("global")
-                    }
-                    className="
-                        px-10
-                        py-5
-                        rounded-full
-                        border
-                        border-cyan-500
-                        bg-cyan-500/10
-                        text-2xl
-                        hover:scale-105
-                        transition
-                    "
-                >
-                    🌎 Global Reach
-                </button>
-
-                <button
-                    onClick={() =>
-                        setSection("culture")
-                    }
-                    className="
-                        px-10
-                        py-5
-                        rounded-full
-                        border
-                        border-purple-500
-                        bg-purple-500/10
-                        text-2xl
-                        hover:scale-105
-                        transition
-                    "
-                >
-                    😎 Meme Culture
-                </button>
-
-                <button
-
-    onClick={logout}
-
-    className="
-        px-10
-        py-5
-        rounded-full
-        border
-        border-red-500
-        bg-red-500/10
-        text-2xl
-        hover:scale-105
-        transition
-    "
->
-    🚪 Logout
-</button>
-
-            </div>
-
-            {/* DYNAMIC CONTENT */}
-
-            <div className="px-14 py-20">
-
-                {
-                    section === "explore" && (
-
-                        <div
-                            className="
-                                grid
-                                md:grid-cols-2
-                                gap-20
-                                items-center
-                            "
-                        >
-
-                            <div>
-
-                                <h1
-                                    className="
-                                        text-7xl
-                                        font-black
-                                        leading-tight
-                                    "
-                                >
-                                    Explore The
-                                    <span
-                                        className="
-                                            block
-                                            text-orange-400
-                                        "
-                                    >
-                                        Future Of Memes 🚀
-                                    </span>
-                                </h1>
-
-                                <p
-                                    className="
-                                        text-2xl
-                                        text-gray-400
-                                        mt-10
-                                        leading-relaxed
-                                    "
-                                >
-                                    MemeSphere combines
-                                    memes, trends,
-                                    communities, and viral
-                                    internet culture in one
-                                    futuristic platform.
-                                </p>
-
-                            </div>
-
-                            <img
-                                src="https://cdn-icons-png.flaticon.com/512/4712/4712109.png"
-                                className="
-                                    w-full
-                                    max-w-[500px]
-                                    mx-auto
-                                    animate-pulse
-                                "
-                            />
-
-                        </div>
-                    )
-                }
-
-                {
-                    section === "memes" && (
-
-                        <div
-                            className="
-                                grid
-                                md:grid-cols-3
-                                gap-10
-                            "
-                        >
-
-                            <div
-                                className="
-                                    bg-white/5
-                                    p-5
-                                    rounded-3xl
-                                    hover:scale-105
-                                    transition
-                                "
-                            >
-
-                                <img
-                                    src="https://i.imgflip.com/30b1gx.jpg"
-                                    className="
-                                        rounded-2xl
-                                        h-[350px]
-                                        w-full
-                                        object-cover
-                                    "
-                                />
-
-                                <h2
-                                    className="
-                                        text-3xl
-                                        mt-5
-                                    "
-                                >
-                                    Programmer Meme 😂
-                                </h2>
-
-                            </div>
-
-                            <div
-                                className="
-                                    bg-white/5
-                                    p-5
-                                    rounded-3xl
-                                    hover:scale-105
-                                    transition
-                                "
-                            >
-
-                                <img
-                                    src="https://i.imgflip.com/1bij.jpg"
-                                    className="
-                                        rounded-2xl
-                                        h-[350px]
-                                        w-full
-                                        object-cover
-                                    "
-                                />
-
-                                <h2
-                                    className="
-                                        text-3xl
-                                        mt-5
-                                    "
-                                >
-                                    Viral Internet Meme 🚀
-                                </h2>
-
-                            </div>
-
-                            <div
-                                className="
-                                    bg-white/5
-                                    p-5
-                                    rounded-3xl
-                                    hover:scale-105
-                                    transition
-                                "
-                            >
-
-                                <img
-                                    src="https://i.imgflip.com/26am.jpg"
-                                    className="
-                                        rounded-2xl
-                                        h-[350px]
-                                        w-full
-                                        object-cover
-                                    "
-                                />
-
-                                <h2
-                                    className="
-                                        text-3xl
-                                        mt-5
-                                    "
-                                >
-                                    Funny Cat Meme 😂
-                                </h2>
-
-                            </div>
-
-                        </div>
-                    )
-                }
-
-                {
-                    section === "trending" && (
-
-                        <div className="grid md:grid-cols-3 gap-10">
-
-                            <div className="bg-orange-500/10 p-10 rounded-3xl text-3xl">
-                                🔥 AI Memes Trending
-                            </div>
-
-                            <div className="bg-pink-500/10 p-10 rounded-3xl text-3xl">
-                                🚀 Coding Memes Viral
-                            </div>
-
-                            <div className="bg-yellow-500/10 p-10 rounded-3xl text-3xl">
-                                😂 College Memes Exploding
-                            </div>
-
-                        </div>
-                    )
-                }
-
-                {
-                    section === "viral" && (
-
-                        <div
-                            className="
-                                grid
-                                md:grid-cols-2
-                                gap-20
-                                items-center
-                            "
-                        >
-
-                            <img
-                                src="https://cdn-icons-png.flaticon.com/512/742/742751.png"
-                                className="
-                                    w-full
-                                    max-w-[500px]
-                                    mx-auto
-                                "
-                            />
-
-                            <div>
-
-                                <h1 className="text-6xl font-black text-pink-400">
-                                    Viral Internet Trends 🚀
-                                </h1>
-
-                                <p className="text-2xl text-gray-400 mt-10">
-                                    Explore latest viral
-                                    internet topics,
-                                    memes, and social trends.
-                                </p>
-
-                            </div>
-
-                        </div>
-                    )
-                }
-
-                {
-                    section === "funny" && (
-
-                        <div
-                            className="
-                                grid
-                                md:grid-cols-3
-                                gap-10
-                            "
-                        >
-
-                            <img
-                                src="https://cdn-icons-png.flaticon.com/512/4333/4333609.png"
-                                className="rounded-3xl"
-                            />
-
-                            <img
-                                src="https://cdn-icons-png.flaticon.com/512/4140/4140037.png"
-                                className="rounded-3xl"
-                            />
-
-                            <img
-                                src="https://cdn-icons-png.flaticon.com/512/4712/4712035.png"
-                                className="rounded-3xl"
-                            />
-
-                        </div>
-                    )
-                }
-
-                {
-                    section === "media" && (
-
-                        <div
-                            className="
-                                grid
-                                md:grid-cols-2
-                                gap-10
-                            "
-                        >
-
-                            <img
-                                src="https://cdn-icons-png.flaticon.com/512/3658/3658773.png"
-                                className="rounded-3xl"
-                            />
-
-                            <img
-                                src="https://cdn-icons-png.flaticon.com/512/2922/2922510.png"
-                                className="rounded-3xl"
-                            />
-
-                        </div>
-                    )
-                }
-
-                {
-                    section === "community" && (
-
-                        <div className="grid md:grid-cols-3 gap-10">
-
-                            <div className="bg-green-500/10 p-10 rounded-3xl text-3xl">
-                                🌍 Coding Community
-                            </div>
-
-                            <div className="bg-green-500/10 p-10 rounded-3xl text-3xl">
-                                😂 Meme Community
-                            </div>
-
-                            <div className="bg-green-500/10 p-10 rounded-3xl text-3xl">
-                                🎮 Gaming Community
-                            </div>
-
-                        </div>
-                    )
-                }
-
-                {
-                    section === "global" && (
-
-                        <div
-                            className="
-                                grid
-                                md:grid-cols-2
-                                gap-20
-                                items-center
-                            "
-                        >
-
-                            <img
-                                src="https://cdn-icons-png.flaticon.com/512/4149/4149673.png"
-                                className="
-                                    w-full
-                                    max-w-[500px]
-                                    mx-auto
-                                "
-                            />
-
-                            <div>
-
-                                <h1 className="text-6xl font-black text-cyan-400">
-                                    Global Reach 🌎
-                                </h1>
-
-                                <p className="text-2xl text-gray-400 mt-10">
-                                    Connect with meme lovers
-                                    worldwide and share
-                                    trends globally.
-                                </p>
-
-                            </div>
-
-                        </div>
-                    )
-                }
-
-                {
-                    section === "culture" && (
-
-                        <div
-                            className="
-                                grid
-                                md:grid-cols-2
-                                gap-20
-                                items-center
-                            "
-                        >
-
-                            <img
-                                src="https://cdn-icons-png.flaticon.com/512/4140/4140047.png"
-                                className="
-                                    w-full
-                                    max-w-[500px]
-                                    mx-auto
-                                "
-                            />
-
-                            <div>
-
-                                <h1 className="text-6xl font-black text-purple-400">
-                                    Meme Culture 😎
-                                </h1>
-
-                                <p className="text-2xl text-gray-400 mt-10">
-                                    Understand internet humor,
-                                    meme evolution, and digital
-                                    social culture.
-                                </p>
-
-                            </div>
-
-                        </div>
-                    )
-                }
-
-                {/* LIVE POSTS */}
-
-<div className="px-14 pb-20">
-
-    <h1
-        className="
-            text-6xl
-            font-black
-            text-orange-400
-            mb-10
-        "
-    >
-        🔥 Live Meme Feed
-    </h1>
-
-    <div
-        className="
-            grid
-            gap-8
-        "
-    >
-
-        {
-
-            posts.map((post) => (
-
-                <div
-
-                    key={post.id}
-
-                    className="
-                        bg-white/10
-                        border
-                        border-gray-700
-                        rounded-3xl
-                        p-8
-                        backdrop-blur-xl
-                        hover:scale-[1.02]
-                        transition
-                    "
-                >
-
-                    <h2
-                        className="
-                            text-4xl
-                            font-bold
-                            text-orange-400
-                        "
-                    >
-                        {post.title}
-                    </h2>
-
-                    <p
-                        className="
-                            text-gray-300
-                            mt-5
-                            text-2xl
-                        "
-                    >
-                        {post.content}
-                    </p>
-
-                    <div className="mt-4 text-gray-400">
-                        Community: {post.community?.name}
-                    </div>
-
-                    {
-                        post.imageUrl && (
-
-                            <img
-                                src={post.imageUrl}
-                                className="
-                                w-full
-                                rounded-3xl
-                                mt-6
-                                max-h-[500px]
-                                object-cover
-                                "
-                            />
-                            )
-                        }
-
-                    <div
-                        className="
-                            flex
-                            gap-5
-                            mt-8
-                        "
-                    >
-
-                        <div className="flex gap-3">
-
-                            <button
-
-                                onClick={() =>
-                                likePost(post.id)
-                            }
-
-                            className="
-                            bg-pink-500/20
-                            border
-                            border-pink-500
-                            px-5
-                            py-2
-                            rounded-xl
-                            "
-                        >
-                        ❤️ Like ({post.likes})
-                    </button>
-
-    <input
-
-        type="text"
-
-        placeholder="Write comment..."
-
-        value={commentText}
-
-        onChange={(e) =>
-            setCommentText(
-                e.target.value
-            )
-        }
-
-        className="
-            bg-black/30
-            border
-            border-gray-700
-            px-4
-            py-2
-            rounded-xl
-            text-white
-        "
-    />
-
-    <button
-
-        onClick={() =>
-            addComment(post.id)
-        }
-
-        className="
-            bg-blue-500/20
-            border
-            border-blue-500
-            px-5
-            py-2
-            rounded-xl
-        "
-    >
-        💬 Comment
-    </button>
-
-</div>
-
-                    </div>
-
+            {/* LIVE FEED */}
+            <section className="px-8 pb-20">
+                <div className="flex items-center gap-3 mb-8">
+                    <FaFire className="text-orange-400 text-3xl" />
+                    <h2 className="text-4xl font-black text-orange-400">Live Meme Feed</h2>
                 </div>
-            ))
-        }
 
-    </div>
+                {posts.length === 0 && (
+                    <div className="text-center py-20 text-gray-500 text-2xl">
+                        Koi post nahi abhi... Pehli post tum karo! 🚀
+                    </div>
+                )}
 
-</div>
+                <div className="grid gap-6 max-w-3xl mx-auto">
+                    {posts.map((post) => (
+                        <div
+                            key={post.id}
+                            className="bg-white/5 border border-gray-800 rounded-3xl p-6 backdrop-blur-xl hover:border-orange-500/50 transition"
+                        >
+                            {/* POST HEADER */}
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="bg-gradient-to-r from-orange-500 to-pink-500 p-2 rounded-full">
+                                    <FaUser className="text-white" />
+                                </div>
+                                <div>
+                                    <span className="text-orange-300 font-semibold">
+                                        u/{post.authorUsername || "anonymous"}
+                                    </span>
+                                    <span className="text-gray-500 text-sm ml-3">
+                                        in r/{post.community?.name || "general"}
+                                    </span>
+                                </div>
+                            </div>
 
-            </div>
+                            {/* POST CONTENT */}
+                            <h2 className="text-2xl font-bold text-white mb-3">{post.title}</h2>
+                            <p className="text-gray-300 text-lg leading-relaxed">{post.content}</p>
 
+                            {/* IMAGE */}
+                            {post.imageUrl && (
+                                <img
+                                    src={post.imageUrl}
+                                    className="w-full rounded-2xl mt-4 max-h-[500px] object-cover"
+                                    alt="post"
+                                />
+                            )}
+
+                            {/* ACTIONS */}
+                            <div className="flex gap-4 mt-5">
+                                <button
+                                    onClick={() => likePost(post.id)}
+                                    className="flex items-center gap-2 bg-pink-500/20 border border-pink-500 px-5 py-2 rounded-xl hover:bg-pink-500/40 transition"
+                                >
+                                    <FaHeart className="text-pink-400" />
+                                    <span>{post.likes}</span>
+                                </button>
+
+                                <button
+                                    onClick={() => toggleComments(post.id)}
+                                    className="flex items-center gap-2 bg-blue-500/20 border border-blue-500 px-5 py-2 rounded-xl hover:bg-blue-500/40 transition"
+                                >
+                                    <FaComment className="text-blue-400" />
+                                    <span>Comments</span>
+                                </button>
+                            </div>
+
+                            {/* COMMENTS SECTION */}
+                            {openComments[post.id] && (
+                                <div className="mt-5 border-t border-gray-700 pt-5">
+
+                                    {/* COMMENT INPUT */}
+                                    <div className="flex gap-3 mb-5">
+                                        <input
+                                            type="text"
+                                            placeholder="Comment likho... 💬"
+                                            value={commentText[post.id] || ""}
+                                            onChange={(e) =>
+                                                setCommentText(prev => ({
+                                                    ...prev,
+                                                    [post.id]: e.target.value
+                                                }))
+                                            }
+                                            onKeyDown={(e) => e.key === "Enter" && addComment(post.id)}
+                                            className="flex-1 bg-black/40 border border-gray-700 px-4 py-3 rounded-xl text-white outline-none focus:border-blue-500 transition"
+                                        />
+                                        <button
+                                            onClick={() => addComment(post.id)}
+                                            className="bg-blue-500 px-5 py-3 rounded-xl font-semibold hover:bg-blue-600 transition"
+                                        >
+                                            Post
+                                        </button>
+                                    </div>
+
+                                    {/* COMMENTS LIST */}
+                                    {postComments[post.id]?.length === 0 && (
+                                        <p className="text-gray-500 text-center py-3">
+                                            Pehla comment karo! 💬
+                                        </p>
+                                    )}
+
+                                    {postComments[post.id]?.map((comment) => (
+                                        <div key={comment.id} className="flex gap-3 mb-4">
+                                            <div className="bg-gradient-to-r from-blue-500 to-purple-500 p-2 rounded-full h-fit">
+                                                <FaUser className="text-white text-xs" />
+                                            </div>
+                                            <div className="bg-white/5 rounded-2xl px-4 py-3 flex-1">
+                                                <span className="text-blue-300 text-sm font-semibold">
+                                                    u/{comment.user?.username || "user"}
+                                                </span>
+                                                <p className="text-gray-200 mt-1">{comment.text}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    ))}
+                </div>
+            </section>
         </div>
     );
 }
